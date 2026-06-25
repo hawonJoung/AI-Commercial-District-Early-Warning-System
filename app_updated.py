@@ -199,7 +199,7 @@ with tab3:
     if len(risk_rules) == 0:
         st.success("No statistically significant risk factors found.")
     else:
-        # 🎯 영문 매핑
+        # 🎯 완벽한 영문 매핑
         feature_desc = {
             "growth_3m": "3M Spending Growth Rate",
             "growth_1m": "1M Spending Growth Rate",
@@ -237,7 +237,11 @@ with tab3:
                     
                 st.write(f"**Status:** {status} | **Current:** `{value:.4f}` (Thresholds: `{threshold_text}`)")
                 
-                # 그래프 시각화
+                # 🔥 [치트키] 매번 그래프를 그리기 전에 Matplotlib 전역 스타일과 폰트 설정을 완전히 공장 초기화합니다.
+                # 리눅스 서버에 꼬여있는 캐시를 무시하고 100% 순정 영문 폰트(sans-serif)로 강제 회귀시킵니다.
+                plt.rcdefaults() 
+                
+                # 초기화 후 도화지 생성
                 fig, ax = plt.subplots(figsize=(5, 3))
                 ax.plot(x, prob_curve * 100, linewidth=2, color="#1f77b4")
                 ax.fill_between(x, prob_curve * 100, alpha=0.15, color="#1f77b4")
@@ -246,22 +250,19 @@ with tab3:
                 
                 for i, th in enumerate(thresholds):
                     if np.isfinite(th):
-                        # 🎯 [핵심 수정] 빈 문자열 "" 대신 None을 주어 Matplotlib 범례(legend)에 아예 잡히지 않도록 차단
                         label = "Risk Threshold" if i == 0 else None
                         ax.axvline(th, linestyle=":", color="red", alpha=0.8, label=label)
                 
                 ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="Current Status")
                 
-                # 🎯 그래프 내부 라벨 영문 선언
+                # 영문 텍스트 명시
                 ax.set_ylabel("Contraction Probability (%)")
                 ax.set_xlabel(feature_desc.get(feature, feature))
                 ax.set_ylim(-5, 105)
                 ax.grid(alpha=0.3)
-                
-                # 🎯 [핵심 추가] 범례 텍스트에 들어오는 결측치들을 깨끗하게 무시하도록 세팅
                 ax.legend(loc="upper right")
                 
-                # 🎯 [핵심 추가] 스트림릿 고유 테마가 Matplotlib 스타일을 오염시키지 않도록 차단하는 옵션 (st.pyplot 내부에 선언)
+                # 스트림릿 테마가 개입하여 네모 박스를 복구하는 현상을 원천 차단
                 st.pyplot(fig, clear_figure=True)
                 plt.close(fig) 
                 st.write("---")
