@@ -17,14 +17,16 @@ st.set_page_config(
 def set_korean_font():
     font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
     
-    # 폰트가 실제로 존재하는지 확인 후 적용
-    if fm.findfont(fm.FontProperties(fname=font_path)) != fm.findfont(fm.FontProperties(family='sans-serif')):
-        font_name = fm.FontProperties(fname=font_path).get_name()
-        plt.rc('font', family=font_name)
-    else:
-        st.warning("폰트를 찾을 수 없습니다. 기본 폰트를 사용합니다.")
-        
-    plt.rcParams['axes.unicode_minus'] = False 
+    try:
+        # 폰트 매니저를 통해 폰트 존재 여부 확인
+        prop = fm.FontProperties(fname=font_path)
+        plt.rc('font', family=prop.get_name())
+        plt.rcParams['axes.unicode_minus'] = False 
+        st.write("✅ 한글 폰트 적용 완료")
+    except Exception as e:
+        # 폰트 적용 실패 시 기본값 유지 (앱은 정상 작동함)
+        st.warning("⚠️ 한글 폰트를 불러올 수 없습니다. 기본 폰트로 실행됩니다.")
+        plt.rcParams['axes.unicode_minus'] = False
 
 # 함수 호출
 set_korean_font()
