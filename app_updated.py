@@ -237,11 +237,12 @@ with tab3:
                     
                 st.write(f"**Status:** {status} | **Current:** `{value:.4f}` (Thresholds: `{threshold_text}`)")
                 
-                # 🔥 [치트키] 매번 그래프를 그리기 전에 Matplotlib 전역 스타일과 폰트 설정을 완전히 공장 초기화합니다.
-                # 리눅스 서버에 꼬여있는 캐시를 무시하고 100% 순정 영문 폰트(sans-serif)로 강제 회귀시킵니다.
+                # 🛠️ [근본 해결] 공장 초기화 후 마이너스 기호 깨짐 방지를 필수 선언합니다.
                 plt.rcdefaults() 
+                plt.rcParams['axes.unicode_minus'] = False # <- 이 옵션이 마이너스 부호 박스를 파괴합니다.
+                plt.rcParams['font.family'] = 'sans-serif'
                 
-                # 초기화 후 도화지 생성
+                # 도화지 생성
                 fig, ax = plt.subplots(figsize=(5, 3))
                 ax.plot(x, prob_curve * 100, linewidth=2, color="#1f77b4")
                 ax.fill_between(x, prob_curve * 100, alpha=0.15, color="#1f77b4")
@@ -255,14 +256,13 @@ with tab3:
                 
                 ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="Current Status")
                 
-                # 영문 텍스트 명시
+                # 영문 라벨 지정
                 ax.set_ylabel("Contraction Probability (%)")
                 ax.set_xlabel(feature_desc.get(feature, feature))
                 ax.set_ylim(-5, 105)
                 ax.grid(alpha=0.3)
                 ax.legend(loc="upper right")
                 
-                # 스트림릿 테마가 개입하여 네모 박스를 복구하는 현상을 원천 차단
                 st.pyplot(fig, clear_figure=True)
                 plt.close(fig) 
                 st.write("---")
