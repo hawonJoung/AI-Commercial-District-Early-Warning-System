@@ -13,22 +13,22 @@ st.set_page_config(
     layout="wide"
 )
 
-# 폰트 경로 설정 및 적용
-def set_korean_font():
-    font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-    
-    try:
-        # 폰트 매니저를 통해 폰트 존재 여부 확인
-        prop = fm.FontProperties(fname=font_path)
-        plt.rc('font', family=prop.get_name())
-        plt.rcParams['axes.unicode_minus'] = False 
-        st.write("✅ 한글 폰트 적용 완료")
-    except Exception as e:
-        # 폰트 적용 실패 시 기본값 유지 (앱은 정상 작동함)
-        st.warning("⚠️ 한글 폰트를 불러올 수 없습니다. 기본 폰트로 실행됩니다.")
-        plt.rcParams['axes.unicode_minus'] = False
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import streamlit as st
 
-# 함수 호출
+def set_korean_font():
+    # 우리가 깃허브에 올린 폰트 경로를 명시
+    font_path = 'fonts/malgun.ttf'
+    
+    # 폰트 매니저에 등록
+    try:
+        font_prop = fm.FontProperties(fname=font_path)
+        plt.rc('font', family=font_prop.get_name())
+        plt.rcParams['axes.unicode_minus'] = False
+    except Exception as e:
+        st.warning(f"폰트 설정 오류: {e}")
+
 set_korean_font()
 
 # ==========================================================
