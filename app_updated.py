@@ -190,7 +190,7 @@ with tab2:
     st.progress(float(row['risk_probability']))
 
 # ----------------------------------------------------------
-# Tab 3: 위험요인 분석 (GAM)
+# Tab 3: 위험요인 분석 (GAM) - Plotly 무적 버전
 # ----------------------------------------------------------
 with tab3:
     st.subheader("🔍 Risk Factor Analysis (GAM)")
@@ -199,7 +199,7 @@ with tab3:
     if len(risk_rules) == 0:
         st.success("No statistically significant risk factors found.")
     else:
-        # 🎯 완벽한 영문 매핑 (원하시면 한글로 다시 바꾸셔도 절대 깨지지 않습니다!)
+        # 🎯 영문 매핑 테이블 (매핑 안 되더라도 한글 그대로 절대 깨짐 없이 출력됨)
         feature_desc = {
             "growth_3m": "3M Spending Growth Rate",
             "growth_1m": "1M Spending Growth Rate",
@@ -211,7 +211,7 @@ with tab3:
         cols = st.columns(2)
         idx = 0
         
-        # 🔴 Plotly를 이용한 렌더링 (서버 폰트 에러 원천 차단)
+        # 🔴 Plotly 엔진 임포트 (Matplotlib의 폰트 지옥 탈출)
         import plotly.graph_objects as go
         
         for feature, rule in risk_rules.items():
@@ -225,8 +225,11 @@ with tab3:
             is_risk = (current_prob >= 0.5)
             status = "🔴 RISK" if is_risk else "🟢 NORMAL"
             
+            # 최종 축 라벨 결정
+            display_label = feature_desc.get(feature, feature)
+            
             with cols[idx % 2]:
-                st.markdown(f"#### {feature_desc.get(feature, feature)}")
+                st.markdown(f"#### {display_label}")
                 
                 if len(thresholds) == 3:
                     threshold_text = f"{thresholds[0]:.3f} / {thresholds[1]:.3f} / {thresholds[2]:.3f}"
@@ -240,10 +243,10 @@ with tab3:
                     
                 st.write(f"**Status:** {status} | **Current:** `{value:.4f}` (Thresholds: `{threshold_text}`)")
                 
-                # 📈 Plotly 도화지 생성
+                # 📈 Plotly 인터랙티브 그래프 생성
                 fig = go.Figure()
                 
-                # 1. GAM 확률 곡선 및 채우기 영역 영역 추가
+                # 1. GAM 확률 곡선 면적 채우기
                 fig.add_trace(go.Scatter(
                     x=x, y=prob_curve * 100,
                     mode='lines',
@@ -253,7 +256,7 @@ with tab3:
                     name='Contraction Prob (%)'
                 ))
                 
-                # 2. 현재 상권 상태 점(Scatter) 추가
+                # 2. 현재 상태 점 표시
                 fig.add_trace(go.Scatter(
                     x=[value], y=[current_prob * 100],
                     mode='markers',
@@ -261,32 +264,32 @@ with tab3:
                     name='Current Status'
                 ))
                 
-                # 3. 수평 위험 기준선 (50%) 추가
+                # 3. 위험 기준선 가로 점선 (50%)
                 fig.add_shape(type="line",
                     x0=min(x), y0=50, x1=max(x), y1=50,
                     line=dict(color="Red", width=2, dash="dash")
                 )
                 
-                # 4. 변수별 임계값 세로선 추가
-                for i, th in enumerate(thresholds):
+                # 4. 임계값 세로 점선들 추가
+                for th in thresholds:
                     if np.isfinite(th):
                         fig.add_shape(type="line",
                             x0=th, y0=-5, x1=th, y1=105,
                             line=dict(color="Red", width=1.5, dash="dot")
                         )
                 
-                # 5. 레이아웃 및 여백 최적화 (웹 폰트 사용으로 절대 깨짐 없음)
+                # 5. 레이아웃 (웹 폰트 기반이라 한글/영어 절대 깨짐 없음)
                 fig.update_layout(
-                    xaxis_title=feature_desc.get(feature, feature),
+                    xaxis_title=display_label,
                     yaxis_title="Contraction Probability (%)",
                     yaxis=dict(range=[-5, 105]),
                     margin=dict(l=50, r=30, t=20, b=50),
                     height=280,
-                    showlegend=False, # 깔끔함을 위해 범례 생략 (마우스 오버 시 팝업 제공)
+                    showlegend=False,
                     template="plotly_white"
                 )
                 
-                # 6. 대시보드에 인터랙티브 차트 출력
+                # 6. 스트림릿 차트 출력
                 st.plotly_chart(fig, use_container_width=True, key=f"chart_{feature}")
                 st.write("---")
             idx += 1
