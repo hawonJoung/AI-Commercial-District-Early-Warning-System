@@ -13,9 +13,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# 한글 폰트 설정
-plt.rcParams["font.family"] = "NanumGothic" 
-plt.rcParams["axes.unicode_minus"] = False
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+# 폰트 경로를 찾아서 설정하는 함수
+def set_korean_font():
+    # 나눔 폰트 경로 검색
+    font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+    font_name = fm.FontProperties(fname=font_path).get_name()
+    plt.rc('font', family=font_name)
+    plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
+    fm._rebuild() # 폰트 캐시 업데이트
+
+# 실행 시 한 번 호출
+set_korean_font()
 
 # ==========================================================
 # 1. 데이터 로드 (캐싱 적용)
