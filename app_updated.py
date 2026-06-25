@@ -13,19 +13,20 @@ st.set_page_config(
     layout="wide"
 )
 
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-
-# 폰트 경로를 찾아서 설정하는 함수
+# 폰트 경로 설정 및 적용
 def set_korean_font():
-    # 나눔 폰트 경로 검색
     font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-    font_name = fm.FontProperties(fname=font_path).get_name()
-    plt.rc('font', family=font_name)
-    plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
-    fm._rebuild() # 폰트 캐시 업데이트
+    
+    # 폰트가 실제로 존재하는지 확인 후 적용
+    if fm.findfont(fm.FontProperties(fname=font_path)) != fm.findfont(fm.FontProperties(family='sans-serif')):
+        font_name = fm.FontProperties(fname=font_path).get_name()
+        plt.rc('font', family=font_name)
+    else:
+        st.warning("폰트를 찾을 수 없습니다. 기본 폰트를 사용합니다.")
+        
+    plt.rcParams['axes.unicode_minus'] = False 
 
-# 실행 시 한 번 호출
+# 함수 호출
 set_korean_font()
 
 # ==========================================================
