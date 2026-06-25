@@ -14,7 +14,6 @@ st.set_page_config(
 )
 
 import os
-import pickle
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import streamlit as st
@@ -25,15 +24,17 @@ def set_korean_font():
     font_path = os.path.join(current_dir, 'fonts', 'malgun.ttf')
     
     try:
-        # 2. 폰트 매니저에 등록 및 이름 가져오기
-        font_prop = fm.FontProperties(fname=font_path)
-        font_name = font_prop.get_name()
+        # 🔥 [핵심] 폰트 파일을 Matplotlib 폰트 매니저에 정식 등록합니다.
+        # 이 작업이 없으면 리눅스 서버에서 폰트를 인식하지 못합니다.
+        fm.fontManager.addfont(font_path)
         
-        # 3. 전역 폰트 설정 적용
+        # 2. 등록된 폰트 파일의 내부 고유 이름(예: 'Malgun Gothic')을 가져옵니다.
+        font_name = fm.FontProperties(fname=font_path).get_name()
+        
+        # 3. 그래프의 전역 폰트 및 마이너스 기호 설정
         plt.rc('font', family=font_name)
         plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
         
-        # ⚠️ 절대 fm._rebuild() 코드는 넣지 마세요 (에러 유발)
     except Exception as e:
         st.warning(f"폰트 설정 오류: {e}")
 
