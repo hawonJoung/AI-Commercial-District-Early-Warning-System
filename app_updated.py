@@ -193,30 +193,20 @@ with tab2:
 # Tab 3: 위험요인 분석 (GAM)
 # ----------------------------------------------------------
 with tab3:
-    st.subheader("🔍 위험요인 분석 (GAM)")
-    st.write("위험확률이 급격히 증가하는 구간(위험 기준선 50%)과 현재 상권의 상태를 비교합니다.")
+    st.subheader("🔍 Risk Factor Analysis (GAM)")
+    st.write("Compare the current commercial district status with the threshold where risk increases sharply (Risk Baseline 50%).")
 
     if len(risk_rules) == 0:
-        st.success("현재 통계적으로 유의한 위험 요인이 발견되지 않았습니다.")
+        st.success("No statistically significant risk factors found.")
     else:
+        # 🎯 영문 매핑으로 변경
         feature_desc = {
-            "growth_3m": "최근 3개월 매출 변화율",
-            "growth_1m": "최근 1개월 매출 변화율",
-            "cv_6m": "최근 6개월 매출 변동성",
-            "growth_12m_imputed": "최근 1년 매출 변화율",
-            "cv_12m_imputed": "최근 1년 매출 변동성"
+            "growth_3m": "3M Spending Growth Rate",
+            "growth_1m": "1M Spending Growth Rate",
+            "cv_6m": "6M Spending Volatility",
+            "growth_12m_imputed": "1Y Spending Growth Rate",
+            "cv_12m_imputed": "1Y Spending Volatility"
         }
-
-        # 💡 [핵심 추가] 폰트 매니저에서 맑은고딕 폰트 객체(my_font) 생성 및 전역 설정 강제 주입
-        current_dir = os.path.dirname(__file__)
-        font_path = os.path.join(current_dir, 'fonts', 'malgun.ttf')
-        my_font = fm.FontProperties(fname=font_path)
-        font_name = my_font.get_name()
-        
-        # 전역 rcParams 설정도 보강
-        plt.rcParams['font.family'] = font_name
-        plt.rcParams['font.sans-serif'] = [font_name]
-        plt.rcParams['axes.unicode_minus'] = False
 
         cols = st.columns(2)
         idx = 0
@@ -230,22 +220,22 @@ with tab3:
             current_prob = np.interp(value, x, prob_curve)
             
             is_risk = (current_prob >= 0.5)
-            status = "🔴 위험" if is_risk else "🟢 정상"
+            status = "🔴 RISK" if is_risk else "🟢 NORMAL"
             
             with cols[idx % 2]:
                 st.markdown(f"#### {feature_desc.get(feature, feature)}")
                 
                 if len(thresholds) == 3:
-                    threshold_text = f"{thresholds[0]:.3f} / {thresholds[1]:.3f} / {thresholds[2]:.3f} (50% 교차점)"
+                    threshold_text = f"{thresholds[0]:.3f} / {thresholds[1]:.3f} / {thresholds[2]:.3f} (50% Intersection)"
                 elif len(thresholds) == 2:
-                    threshold_text = f"{thresholds[0]:.3f} ~ {thresholds[1]:.3f} 구간"
+                    threshold_text = f"{thresholds[0]:.3f} ~ {thresholds[1]:.3f} Range"
                 elif len(thresholds) == 1:
                     direction = feature_direction[feature]
-                    threshold_text = f"{thresholds[0]:.3f} 이상" if direction == "increase" else f"{thresholds[0]:.3f} 이하"
+                    threshold_text = f"Over {thresholds[0]:.3f}" if direction == "increase" else f"Under {thresholds[0]:.3f}"
                 else:
-                    threshold_text = "조건 만족 구간 없음"
+                    threshold_text = "No condition met"
                     
-                st.write(f"**판정:** {status} | **현재값:** `{value:.4f}` (기준점들: `{threshold_text}`)")
+                st.write(f"**Status:** {status} | **Current:** `{value:.4f}` (Thresholds: `{threshold_text}`)")
                 
                 # 그래프 시각화
                 fig, ax = plt.subplots(figsize=(5, 3))
@@ -256,25 +246,17 @@ with tab3:
                 
                 for i, th in enumerate(thresholds):
                     if np.isfinite(th):
-                        label = "위험 임계점" if i == 0 else ""
+                        label = "Risk Threshold" if i == 0 else ""
                         ax.axvline(th, linestyle=":", color="red", alpha=0.8, label=label)
                 
-                ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="현재 상권")
+                ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="Current Status")
                 
-                # 🎯 [변경] 모든 텍스트 라벨과 폰트에 직접 'fontproperties=my_font' 주입하여 강제화
-                ax.set_ylabel("위축 확률 (%)", fontproperties=my_font)
-                ax.set_xlabel(feature_desc.get(feature, feature), fontproperties=my_font)
+                # 🎯 그래프 내부 라벨 영문 선언
+                ax.set_ylabel("Contraction Probability (%)")
+                ax.set_xlabel(feature_desc.get(feature, feature))
                 ax.set_ylim(-5, 105)
                 ax.grid(alpha=0.3)
-                
-                # 범례(Legend)에도 폰트 명시적 주입
-                ax.legend(prop=my_font)
-                
-                # 🎯 축 눈금 숫자 글꼴까지 깨질 경우를 대비해 맑은고딕 강제 주입
-                for label in ax.get_xticklabels():
-                    label.set_fontproperties(my_font)
-                for label in ax.get_yticklabels():
-                    label.set_fontproperties(my_font)
+                ax.legend()
                 
                 st.pyplot(fig)
                 plt.close(fig) 
