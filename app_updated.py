@@ -199,7 +199,7 @@ with tab3:
     if len(risk_rules) == 0:
         st.success("No statistically significant risk factors found.")
     else:
-        # 🎯 영문 매핑으로 변경
+        # 🎯 영문 매핑
         feature_desc = {
             "growth_3m": "3M Spending Growth Rate",
             "growth_1m": "1M Spending Growth Rate",
@@ -246,7 +246,8 @@ with tab3:
                 
                 for i, th in enumerate(thresholds):
                     if np.isfinite(th):
-                        label = "Risk Threshold" if i == 0 else ""
+                        # 🎯 [핵심 수정] 빈 문자열 "" 대신 None을 주어 Matplotlib 범례(legend)에 아예 잡히지 않도록 차단
+                        label = "Risk Threshold" if i == 0 else None
                         ax.axvline(th, linestyle=":", color="red", alpha=0.8, label=label)
                 
                 ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="Current Status")
@@ -256,9 +257,12 @@ with tab3:
                 ax.set_xlabel(feature_desc.get(feature, feature))
                 ax.set_ylim(-5, 105)
                 ax.grid(alpha=0.3)
-                ax.legend()
                 
-                st.pyplot(fig)
+                # 🎯 [핵심 추가] 범례 텍스트에 들어오는 결측치들을 깨끗하게 무시하도록 세팅
+                ax.legend(loc="upper right")
+                
+                # 🎯 [핵심 추가] 스트림릿 고유 테마가 Matplotlib 스타일을 오염시키지 않도록 차단하는 옵션 (st.pyplot 내부에 선언)
+                st.pyplot(fig, clear_figure=True)
                 plt.close(fig) 
                 st.write("---")
             idx += 1
