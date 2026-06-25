@@ -19,26 +19,33 @@ import matplotlib.font_manager as fm
 import streamlit as st
 
 def set_korean_font():
-    # 1. 현재 파일 위치를 기준으로 fonts/malgun.ttf 절대 경로 생성
+    # 1. 현재 파일 위치 기준 fonts/malgun.ttf 절대 경로 생성
     current_dir = os.path.dirname(__file__)
     font_path = os.path.join(current_dir, 'fonts', 'malgun.ttf')
     
+    # 2. 파일이 진짜 해당 경로에 있는지 검사
+    if not os.path.exists(font_path):
+        st.error(f"🚨 폰트 파일을 찾을 수 없습니다. 경로를 확인해주세요: {font_path}")
+        return
+        
     try:
-        # 🔥 [핵심] 폰트 파일을 Matplotlib 폰트 매니저에 정식 등록합니다.
-        # 이 작업이 없으면 리눅스 서버에서 폰트를 인식하지 못합니다.
+        # 3. Matplotlib 폰트 매니저에 파일 추가
         fm.fontManager.addfont(font_path)
+        font_prop = fm.FontProperties(fname=font_path)
+        font_name = font_prop.get_name()
         
-        # 2. 등록된 폰트 파일의 내부 고유 이름(예: 'Malgun Gothic')을 가져옵니다.
-        font_name = fm.FontProperties(fname=font_path).get_name()
+        # 4. 가장 확실한 rcParams 방식으로 전역 폰트 강제 지정
+        plt.rcParams['font.family'] = font_name
+        plt.rcParams['font.sans-serif'] = [font_name]
+        plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
         
-        # 3. 그래프의 전역 폰트 및 마이너스 기호 설정
-        plt.rc('font', family=font_name)
-        plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
+        # 💡 성공적으로 로드되었는지 대시보드 상단에 띄워 확인하기 (확인 후 삭제 가능)
+        st.sidebar.success(f"🎵 폰트 로드 완료: {font_name}")
         
     except Exception as e:
-        st.warning(f"폰트 설정 오류: {e}")
+        st.error(f"폰트 설정 중 오류 발생: {e}")
 
-# 앱 시작 시 최상단에서 한 번만 호출
+# 앱 최상단에서 호출
 set_korean_font()
 
 # ==========================================================
