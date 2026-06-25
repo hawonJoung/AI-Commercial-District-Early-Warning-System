@@ -207,6 +207,17 @@ with tab3:
             "cv_12m_imputed": "최근 1년 매출 변동성"
         }
 
+        # 💡 [핵심 추가] 폰트 매니저에서 맑은고딕 폰트 객체(my_font) 생성 및 전역 설정 강제 주입
+        current_dir = os.path.dirname(__file__)
+        font_path = os.path.join(current_dir, 'fonts', 'malgun.ttf')
+        my_font = fm.FontProperties(fname=font_path)
+        font_name = my_font.get_name()
+        
+        # 전역 rcParams 설정도 보강
+        plt.rcParams['font.family'] = font_name
+        plt.rcParams['font.sans-serif'] = [font_name]
+        plt.rcParams['axes.unicode_minus'] = False
+
         cols = st.columns(2)
         idx = 0
         
@@ -250,11 +261,20 @@ with tab3:
                 
                 ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="현재 상권")
                 
-                ax.set_ylabel("위축 확률 (%)")
-                ax.set_xlabel(feature_desc.get(feature, feature))
+                # 🎯 [변경] 모든 텍스트 라벨과 폰트에 직접 'fontproperties=my_font' 주입하여 강제화
+                ax.set_ylabel("위축 확률 (%)", fontproperties=my_font)
+                ax.set_xlabel(feature_desc.get(feature, feature), fontproperties=my_font)
                 ax.set_ylim(-5, 105)
                 ax.grid(alpha=0.3)
-                ax.legend()
+                
+                # 범례(Legend)에도 폰트 명시적 주입
+                ax.legend(prop=my_font)
+                
+                # 🎯 축 눈금 숫자 글꼴까지 깨질 경우를 대비해 맑은고딕 강제 주입
+                for label in ax.get_xticklabels():
+                    label.set_fontproperties(my_font)
+                for label in ax.get_yticklabels():
+                    label.set_fontproperties(my_font)
                 
                 st.pyplot(fig)
                 plt.close(fig) 
