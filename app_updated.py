@@ -199,7 +199,7 @@ with tab3:
     if len(risk_rules) == 0:
         st.success("No statistically significant risk factors found.")
     else:
-        # 🎯 완벽한 영문 매핑
+        # 🎯 완벽한 영문 매핑 (원하시면 한글로 다시 바꾸셔도 절대 깨지지 않습니다!)
         feature_desc = {
             "growth_3m": "3M Spending Growth Rate",
             "growth_1m": "1M Spending Growth Rate",
@@ -210,6 +210,9 @@ with tab3:
 
         cols = st.columns(2)
         idx = 0
+        
+        # 🔴 Plotly를 이용한 렌더링 (서버 폰트 에러 원천 차단)
+        import plotly.graph_objects as go
         
         for feature, rule in risk_rules.items():
             thresholds = rule.get("all_thresholds", [rule["threshold"]])
@@ -226,7 +229,7 @@ with tab3:
                 st.markdown(f"#### {feature_desc.get(feature, feature)}")
                 
                 if len(thresholds) == 3:
-                    threshold_text = f"{thresholds[0]:.3f} / {thresholds[1]:.3f} / {thresholds[2]:.3f} (50% Intersection)"
+                    threshold_text = f"{thresholds[0]:.3f} / {thresholds[1]:.3f} / {thresholds[2]:.3f}"
                 elif len(thresholds) == 2:
                     threshold_text = f"{thresholds[0]:.3f} ~ {thresholds[1]:.3f} Range"
                 elif len(thresholds) == 1:
@@ -237,34 +240,54 @@ with tab3:
                     
                 st.write(f"**Status:** {status} | **Current:** `{value:.4f}` (Thresholds: `{threshold_text}`)")
                 
-                # 🛠️ [근본 해결] 공장 초기화 후 마이너스 기호 깨짐 방지를 필수 선언합니다.
-                plt.rcdefaults() 
-                plt.rcParams['axes.unicode_minus'] = False # <- 이 옵션이 마이너스 부호 박스를 파괴합니다.
-                plt.rcParams['font.family'] = 'sans-serif'
+                # 📈 Plotly 도화지 생성
+                fig = go.Figure()
                 
-                # 도화지 생성
-                fig, ax = plt.subplots(figsize=(5, 3))
-                ax.plot(x, prob_curve * 100, linewidth=2, color="#1f77b4")
-                ax.fill_between(x, prob_curve * 100, alpha=0.15, color="#1f77b4")
+                # 1. GAM 확률 곡선 및 채우기 영역 영역 추가
+                fig.add_trace(go.Scatter(
+                    x=x, y=prob_curve * 100,
+                    mode='lines',
+                    line=dict(color='#1f77b4', width=2.5),
+                    fill='tozeroy',
+                    fillcolor='rgba(31, 119, 180, 0.15)',
+                    name='Contraction Prob (%)'
+                ))
                 
-                ax.axhline(50.0, linestyle="--", color="red", alpha=0.7)
+                # 2. 현재 상권 상태 점(Scatter) 추가
+                fig.add_trace(go.Scatter(
+                    x=[value], y=[current_prob * 100],
+                    mode='markers',
+                    marker=dict(color='orange', size=12, line=dict(color='black', width=1.5)),
+                    name='Current Status'
+                ))
                 
+                # 3. 수평 위험 기준선 (50%) 추가
+                fig.add_shape(type="line",
+                    x0=min(x), y0=50, x1=max(x), y1=50,
+                    line=dict(color="Red", width=2, dash="dash")
+                )
+                
+                # 4. 변수별 임계값 세로선 추가
                 for i, th in enumerate(thresholds):
                     if np.isfinite(th):
-                        label = "Risk Threshold" if i == 0 else None
-                        ax.axvline(th, linestyle=":", color="red", alpha=0.8, label=label)
+                        fig.add_shape(type="line",
+                            x0=th, y0=-5, x1=th, y1=105,
+                            line=dict(color="Red", width=1.5, dash="dot")
+                        )
                 
-                ax.scatter(value, current_prob * 100, s=100, color="orange", edgecolor="black", zorder=5, label="Current Status")
+                # 5. 레이아웃 및 여백 최적화 (웹 폰트 사용으로 절대 깨짐 없음)
+                fig.update_layout(
+                    xaxis_title=feature_desc.get(feature, feature),
+                    yaxis_title="Contraction Probability (%)",
+                    yaxis=dict(range=[-5, 105]),
+                    margin=dict(l=50, r=30, t=20, b=50),
+                    height=280,
+                    showlegend=False, # 깔끔함을 위해 범례 생략 (마우스 오버 시 팝업 제공)
+                    template="plotly_white"
+                )
                 
-                # 영문 라벨 지정
-                ax.set_ylabel("Contraction Probability (%)")
-                ax.set_xlabel(feature_desc.get(feature, feature))
-                ax.set_ylim(-5, 105)
-                ax.grid(alpha=0.3)
-                ax.legend(loc="upper right")
-                
-                st.pyplot(fig, clear_figure=True)
-                plt.close(fig) 
+                # 6. 대시보드에 인터랙티브 차트 출력
+                st.plotly_chart(fig, use_container_width=True, key=f"chart_{feature}")
                 st.write("---")
             idx += 1
 
